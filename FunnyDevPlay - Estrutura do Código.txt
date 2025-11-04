@@ -1,0 +1,26 @@
+FunnyDevPlay/
+├── index.html (página principal)
+├── css/
+│   ├── style.css (estilos gerais)
+│   └── responsive.css (responsividade)
+├── js/
+│   ├── app.js (lógica principal)
+│   ├── games/
+│   │   ├── tetris.js
+│   │   ├── snake.js
+│   │   ├── memory.js
+│   │   ├── galaga.js
+│   │   └── arkanoid.js
+│   └── utils.js (funções auxiliares)
+├── assets/
+│   ├── images/
+│   ├── sounds/
+│   └── icons/
+└── README.md
+
+1. 🏠 Portal Principal (index.html)
+2. 🎨 Sistema de Navegação
+3. 📱 Design Responsivo
+4. 🕹️ Motor de Jogos (Game Engine)
+5. 💾 Sistema de Pontuação
+6. 🎯 Controles Cross-Platform
