@@ -40,3 +40,13 @@ nav {
     transition: all 0.3s ease;
     font-weight: bold;
 }
+
+.nav-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: translateY(-2px)
+}
+
+.nav-btn.active {
+    background: #4CAF50;
+    border-color: #4CAF50;
+}
