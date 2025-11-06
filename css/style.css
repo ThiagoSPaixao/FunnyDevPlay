@@ -3,5 +3,13 @@
 /* Reset Básico - Remove margens e padding padrão */
 
 * {
-    
+    margin: 0;
+    padding: 0;
+      /* 🎯 IMPORTANTE: box-sizing border-box faz o padding NÃO aumentar o tamanho total */
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Arial', sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }
