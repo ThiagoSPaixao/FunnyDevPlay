@@ -259,3 +259,59 @@ button:focus {
         gap: 5px;
     }
 }
+
+/* 🚀 CONTROLES DO SNAKE FLUIDO */
+
+.speed-controls {
+    margin: 15px 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.speed-slider {
+    width: 150px;
+    height: 5px;
+    border-radius: 5px;
+    background: #ddd;
+    outline: none;
+}
+
+.speed-slider::-webkit-slider-thumb {
+    appearance: none;
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    background: #4CAF50;
+    cursor: pointer;
+}
+
+#fps-counter {
+    color: #4CAF50;
+    font-weight: bold;
+}
+
+/* 🎯 MELHORIAS VISUAIS */
+.game-controls {
+    background: rgba(0, 0, 0, 0.3) !important;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.control-btn {
+    background: linear-gradient(135deg, #4CAF50, #45a049);
+    border: none;
+    padding: 12px 20px;
+    font-size: 14px;
+    font-weight: bold;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+.control-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+}

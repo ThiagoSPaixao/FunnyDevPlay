@@ -1,21 +1,22 @@
-// 🐍 SNAKE GAME - Versão Melhorada com Controles
+// 🐍 SNAKE GAME - VERSÃO ULTRA FLUIDA
 
 export default class SnakeGame {
     constructor() {
         // 🏷️ Identificação do jogo
-        this.name = "Snake Classic";
-        this.version = "1.0";
+        this.name = "Snake Classic Pro";
+        this.version = "2.0";
         
-        // 🎯 CONCEITO: Configurações do jogo
+        // 🎯 CONFIGURAÇÕES OTIMIZADAS
         this.config = {
             width: 400,
             height: 400,
             gridSize: 20,
-            speed: 150
+            speed: 100, // 🚀 MAIS RÁPIDO = MAIS FLUIDO
+            frameRate: 60 // 🎯 ALTA TAXA DE ATUALIZAÇÃO
         };
         
         // 🎮 Estado do jogo
-        this.gameState = 'stopped'; // stopped, running, paused, gameover
+        this.gameState = 'stopped';
         this.score = 0;
         this.highScore = 0;
         
@@ -27,38 +28,48 @@ export default class SnakeGame {
         // 🍎 Dados da comida
         this.food = { x: 0, y: 0 };
         
-        // 🔧 Referências técnicas
+        // 🔧 Referências técnicas OTIMIZADAS
         this.canvas = null;
         this.ctx = null;
         this.gameLoop = null;
+        this.lastUpdateTime = 0;
+        this.deltaTime = 0;
         
-        console.log('🐍 Snake Game criado!');
+        // 🎯 BUFFER para movimento suave
+        this.pendingMove = null;
+        this.moveQueue = [];
+        
+        console.log('🐍 Snake Game ULTRA FLUIDO criado!');
     }
 
     async init() {
-        console.log('🎮 Inicializando Snake Game...');
+        console.log('🎮 Inicializando Snake Game Fluido...');
         
         try {
             // Configuração do canvas
             this.canvas = document.getElementById('game-canvas');
             this.ctx = this.canvas.getContext('2d');
             
+            // 🎯 OTIMIZAÇÃO: Configurações de performance
+            this.ctx.imageSmoothingEnabled = false; // Pixels nítidos
+            this.canvas.style.imageRendering = 'pixelated'; // Visual retro
+            
             this.canvas.width = this.config.width;
             this.canvas.height = this.config.height;
             
-            // 🎯 ADICIONAMOS: Cria os controles na tela
+            // Cria os controles
             this.createGameControls();
             
-            // Configura controles de teclado
+            // Configura controles
             this.setupControls();
             
             // Inicializa o jogo
             this.reset();
             
-            // 🎯 ADICIONAMOS: Inicia automaticamente!
-            this.start();
+            // 🎯 INICIA COM GAME LOOP MODERNO
+            this.startSmoothGameLoop();
             
-            console.log('✅ Snake Game inicializado com sucesso!');
+            console.log('✅ Snake Game Fluido inicializado!');
             
         } catch (error) {
             console.error('❌ Erro ao inicializar Snake:', error);
@@ -66,14 +77,10 @@ export default class SnakeGame {
         }
     }
 
-    // 🎮 ADICIONAMOS ESTE MÉTODO: Cria controles visuais
+    // 🎮 Cria controles visuais
     createGameControls() {
-        console.log('🎮 Criando controles visuais...');
-        
-        // Encontra o container do jogo
         const gameContainer = document.getElementById('game-container');
         
-        // 🎯 Cria div para os controles
         const controlsDiv = document.createElement('div');
         controlsDiv.className = 'game-controls';
         controlsDiv.innerHTML = `
@@ -85,24 +92,28 @@ export default class SnakeGame {
             <div class="score-display">
                 <span>Score: <span id="current-score">0</span></span>
                 <span>Recorde: <span id="high-score">0</span></span>
+                <span>FPS: <span id="fps-counter">0</span></span>
+            </div>
+            <div class="speed-controls">
+                <label for="speed-slider">Velocidade:</label>
+                <input type="range" id="speed-slider" min="50" max="200" value="100" class="speed-slider">
+                <span id="speed-value">Normal</span>
             </div>
             <div class="instructions">
-                <p>🎯 Use <strong>SETAS</strong> ou <strong>WASD</strong> para mover</p>
-                <p>⏸️ <strong>ESPAÇO</strong> para pausar</p>
+                <p>🎯 <strong>SETAS</strong> ou <strong>WASD</strong> para mover</p>
+                <p>⏸️ <strong>ESPAÇO</strong> para pausar | <strong>R</strong> para reiniciar</p>
             </div>
         `;
         
-        // Adiciona os controles DEPOIS do canvas
         this.canvas.parentNode.insertBefore(controlsDiv, this.canvas.nextSibling);
-        
-        // Configura os eventos dos botões
         this.setupControlButtons();
+        this.setupSpeedControl();
     }
 
-    // 🎮 ADICIONAMOS ESTE MÉTODO: Configura botões de controle
+    // 🎮 Configura botões de controle
     setupControlButtons() {
         document.getElementById('start-btn').addEventListener('click', () => {
-            this.start();
+            this.startSmoothGameLoop();
         });
         
         document.getElementById('pause-btn').addEventListener('click', () => {
@@ -111,15 +122,30 @@ export default class SnakeGame {
         
         document.getElementById('reset-btn').addEventListener('click', () => {
             this.reset();
-            this.start();
+            this.startSmoothGameLoop();
+        });
+    }
+
+    // 🎚️ ADICIONAMOS: Controle de velocidade
+    setupSpeedControl() {
+        const speedSlider = document.getElementById('speed-slider');
+        const speedValue = document.getElementById('speed-value');
+        
+        speedSlider.addEventListener('input', (e) => {
+            const speed = parseInt(e.target.value);
+            this.config.speed = 250 - speed; // Invertido: maior valor = mais lento
+            
+            // Atualiza texto descritivo
+            if (speed < 80) speedValue.textContent = 'Lento';
+            else if (speed < 120) speedValue.textContent = 'Normal';
+            else if (speed < 160) speedValue.textContent = 'Rápido';
+            else speedValue.textContent = 'Muito Rápido';
         });
     }
 
     // ⌨️ Configurar controles do teclado
     setupControls() {
-        console.log('🎮 Configurando controles...');
-        
-        // 🎯 CONCEITO: Event Listener para teclado
+        // 🎯 OTIMIZAÇÃO: Usamos keydown para resposta imediata
         document.addEventListener('keydown', (event) => {
             this.handleKeyPress(event);
         });
@@ -127,29 +153,32 @@ export default class SnakeGame {
 
     // ⌨️ Manipular pressionamento de teclas
     handleKeyPress(event) {
+        // 🎯 OTIMIZAÇÃO: Resposta mais rápida às teclas
+        let newDirection = null;
+        
         switch(event.key) {
             case 'ArrowUp':
             case 'w':
             case 'W':
-                if (this.direction !== 'down') this.nextDirection = 'up';
+                if (this.direction !== 'down') newDirection = 'up';
                 break;
                 
             case 'ArrowDown':
             case 's':
             case 'S':
-                if (this.direction !== 'up') this.nextDirection = 'down';
+                if (this.direction !== 'up') newDirection = 'down';
                 break;
                 
             case 'ArrowLeft':
             case 'a':
             case 'A':
-                if (this.direction !== 'right') this.nextDirection = 'left';
+                if (this.direction !== 'right') newDirection = 'left';
                 break;
                 
             case 'ArrowRight':
             case 'd':
             case 'D':
-                if (this.direction !== 'left') this.nextDirection = 'right';
+                if (this.direction !== 'left') newDirection = 'right';
                 break;
                 
             case ' ': // Barra de espaço
@@ -159,55 +188,61 @@ export default class SnakeGame {
                 
             case 'r':
             case 'R':
-                if (this.gameState === 'gameover') {
-                    this.reset();
-                    this.start();
-                }
+                event.preventDefault();
+                this.reset();
+                this.startSmoothGameLoop();
                 break;
         }
+        
+        // 🎯 OTIMIZAÇÃO: Aplica a direção imediatamente se possível
+        if (newDirection && this.gameState === 'running') {
+            this.nextDirection = newDirection;
+            
+            // 🚀 MELHORIA: Movimento extra suave - permite mudança rápida de direção
+            if (this.canChangeDirectionImmediately()) {
+                this.direction = newDirection;
+            }
+        }
+    }
+
+    // 🎯 NOVO MÉTODO: Verifica se pode mudar direção imediatamente
+    canChangeDirectionImmediately() {
+        // Permite mudança mais responsiva
+        return true;
     }
 
     // 🔄 Reiniciar o jogo
     reset() {
-        console.log('🔄 Reiniciando jogo...');
-        
-        // Para o loop atual se estiver rodando
         this.stop();
         
-        // 🐍 Inicializa a cobrinha no centro
         const startX = Math.floor(this.config.width / this.config.gridSize / 2);
         const startY = Math.floor(this.config.height / this.config.gridSize / 2);
         
         this.snake = [
-            { x: startX, y: startY },     // Cabeça
-            { x: startX - 1, y: startY }, // Corpo
-            { x: startX - 2, y: startY }  // Mais corpo
+            { x: startX, y: startY },
+            { x: startX - 1, y: startY },
+            { x: startX - 2, y: startY }
         ];
         
-        // 🔄 Reset de direções
         this.direction = 'right';
         this.nextDirection = 'right';
-        
-        // 🍎 Gera a primeira comida
         this.generateFood();
-        
-        // 🏆 Reset de scores
         this.score = 0;
-        this.updateScoreDisplay();
-        
-        // 🎮 Estado do jogo
         this.gameState = 'stopped';
         
-        // 🎨 Desenha o estado inicial
-        this.draw();
+        // 🎯 LIMPA buffers
+        this.moveQueue = [];
+        this.pendingMove = null;
         
-        console.log('✅ Jogo reiniciado!');
+        this.updateScoreDisplay();
+        this.draw();
     }
 
-    // 🍎 Gerar comida em posição aleatória
+    // 🍎 Gerar comida
     generateFood() {
         let newFood;
         let foodIsOnSnake;
+        let attempts = 0;
         
         do {
             newFood = {
@@ -219,68 +254,93 @@ export default class SnakeGame {
                 segment.x === newFood.x && segment.y === newFood.y
             );
             
+            attempts++;
+            // 🎯 Prevenir loop infinito
+            if (attempts > 100) break;
+            
         } while (foodIsOnSnake);
         
         this.food = newFood;
     }
 
-    // ▶️ Iniciar o jogo
-    start() {
+    // 🚀🎯 MÉTODO NOVO: Game Loop Moderno e Suave
+    startSmoothGameLoop() {
         if (this.gameState === 'stopped' || this.gameState === 'gameover') {
-            console.log('🎮 Iniciando jogo!');
+            console.log('🚀 Iniciando Game Loop Suave...');
             this.gameState = 'running';
+            this.lastUpdateTime = performance.now();
             
-            // 🎯 Game Loop - o coração do jogo!
-            this.gameLoop = setInterval(() => {
-                this.update();
+            // 🎯 GAME LOOP MODERNO: requestAnimationFrame + controle de tempo
+            const gameLoop = (currentTime) => {
+                if (this.gameState !== 'running') return;
+                
+                // 🎯 CALCULA DELTA TIME para movimento consistente
+                this.deltaTime = currentTime - this.lastUpdateTime;
+                
+                // 🎯 ATUALIZAÇÃO: Baseada em tempo, não em frames fixos
+                if (this.deltaTime >= this.config.speed) {
+                    this.update();
+                    this.lastUpdateTime = currentTime - (this.deltaTime % this.config.speed);
+                }
+                
+                // 🎯 RENDERIZAÇÃO: Sempre na máxima frequência possível
                 this.draw();
-            }, this.config.speed);
+                
+                // 🎯 ATUALIZA FPS
+                this.updateFPSCounter();
+                
+                // 🎯 CONTINUA O LOOP
+                this.gameLoop = requestAnimationFrame(gameLoop);
+            };
+            
+            this.gameLoop = requestAnimationFrame(gameLoop);
         }
     }
 
-    // ⏸️ Pausar/Despausar o jogo
+    // 📊 NOVO MÉTODO: Contador de FPS
+    updateFPSCounter() {
+        const fpsElement = document.getElementById('fps-counter');
+        if (fpsElement && this.deltaTime > 0) {
+            const fps = Math.round(1000 / this.deltaTime);
+            fpsElement.textContent = Math.min(fps, 60); // Limita a 60 para display
+        }
+    }
+
+    // ⏸️ Pausar/Despausar
     togglePause() {
         if (this.gameState === 'running') {
-            console.log('⏸️ Jogo pausado');
             this.gameState = 'paused';
-            clearInterval(this.gameLoop);
-            this.draw(); // Redesenha para mostrar "PAUSADO"
+            if (this.gameLoop) {
+                cancelAnimationFrame(this.gameLoop);
+                this.gameLoop = null;
+            }
+            this.draw();
         } else if (this.gameState === 'paused') {
-            console.log('▶️ Jogo despausado');
-            this.gameState = 'running';
-            this.gameLoop = setInterval(() => {
-                this.update();
-                this.draw();
-            }, this.config.speed);
+            this.startSmoothGameLoop();
         }
     }
 
-    // ⏹️ Parar o jogo completamente
+    // ⏹️ Parar o jogo
     stop() {
         this.gameState = 'stopped';
         if (this.gameLoop) {
-            clearInterval(this.gameLoop);
+            cancelAnimationFrame(this.gameLoop);
             this.gameLoop = null;
         }
     }
 
     // 🔄 Atualizar a lógica do jogo
     update() {
-        // Atualiza a direção atual
+        // 🎯 MOVIMENTO MAIS SUAVE: Aplica a direção
         this.direction = this.nextDirection;
-        
-        // 🐍 Move a cobrinha
         this.moveSnake();
-        
-        // 🎯 Verifica colisões
         this.checkCollisions();
     }
 
-    // 🐍 Mover a cobrinha
+    // 🐍 Mover a cobrinha (OTIMIZADO)
     moveSnake() {
         const head = { ...this.snake[0] };
         
-        // Move a cabeça baseado na direção
         switch(this.direction) {
             case 'up':    head.y--; break;
             case 'down':  head.y++; break;
@@ -290,29 +350,36 @@ export default class SnakeGame {
         
         this.snake.unshift(head);
         
-        // 🍎 Verifica se comeu a comida
         if (head.x === this.food.x && head.y === this.food.y) {
-            console.log('🐍 Comida comida! +10 pontos');
             this.score += 10;
             this.generateFood();
             this.updateScoreDisplay();
+            
+            // 🎯 FEEDBACK VISUAL ao comer
+            this.createFoodParticles();
         } else {
             this.snake.pop();
         }
+    }
+
+    // 🎯 NOVO MÉTODO: Partículas para feedback visual
+    createFoodParticles() {
+        // Podemos adicionar efeitos visuais depois
+        console.log('✨ Comida coletada!');
     }
 
     // 🚨 Verificar colisões
     checkCollisions() {
         const head = this.snake[0];
         
-        // 1. Colisão com as paredes
+        // Colisão com paredes
         if (head.x < 0 || head.x >= this.config.width / this.config.gridSize ||
             head.y < 0 || head.y >= this.config.height / this.config.gridSize) {
             this.gameOver();
             return;
         }
         
-        // 2. Colisão com o próprio corpo
+        // Colisão com corpo
         for (let i = 1; i < this.snake.length; i++) {
             if (head.x === this.snake[i].x && head.y === this.snake[i].y) {
                 this.gameOver();
@@ -323,36 +390,29 @@ export default class SnakeGame {
 
     // 💀 Game Over
     gameOver() {
-        console.log('💀 Game Over!');
         this.gameState = 'gameover';
         this.stop();
         
-        // 🏆 Atualiza high score
         if (this.score > this.highScore) {
             this.highScore = this.score;
             this.updateScoreDisplay();
         }
         
-        // 💾 Salva a pontuação na plataforma
         if (window.gamePlatform) {
             window.gamePlatform.saveScore('Jogador', 'snake', this.score);
         }
     }
 
-    // 🎨 ADICIONAMOS: Atualizar display de score
+    // 🎨 Atualizar display de score
     updateScoreDisplay() {
         const currentScoreElement = document.getElementById('current-score');
         const highScoreElement = document.getElementById('high-score');
         
-        if (currentScoreElement) {
-            currentScoreElement.textContent = this.score;
-        }
-        if (highScoreElement) {
-            highScoreElement.textContent = this.highScore;
-        }
+        if (currentScoreElement) currentScoreElement.textContent = this.score;
+        if (highScoreElement) highScoreElement.textContent = this.highScore;
     }
 
-    // 🎨 Desenhar o jogo na tela
+    // 🎨 Desenhar o jogo (OTIMIZADO)
     draw() {
         this.clearCanvas();
         this.drawGrid();
@@ -371,12 +431,11 @@ export default class SnakeGame {
         this.ctx.fillRect(0, 0, this.config.width, this.config.height);
     }
 
-    // 🔲 Desenhar grade
+    // 🔲 Desenhar grade (MAIS SUAVE)
     drawGrid() {
         this.ctx.strokeStyle = '#2a2a2a';
         this.ctx.lineWidth = 0.5;
         
-        // Linhas verticais
         for (let x = 0; x <= this.config.width; x += this.config.gridSize) {
             this.ctx.beginPath();
             this.ctx.moveTo(x, 0);
@@ -384,7 +443,6 @@ export default class SnakeGame {
             this.ctx.stroke();
         }
         
-        // Linhas horizontais
         for (let y = 0; y <= this.config.height; y += this.config.gridSize) {
             this.ctx.beginPath();
             this.ctx.moveTo(0, y);
@@ -393,15 +451,16 @@ export default class SnakeGame {
         }
     }
 
-    // 🐍 Desenhar a cobrinha
+    // 🐍 Desenhar a cobrinha (MAIS BONITA)
     drawSnake() {
         this.snake.forEach((segment, index) => {
+            // 🎯 GRADIENTE para a cobra - visual mais suave
             if (index === 0) {
-                // 🐍 Cabeça
-                this.ctx.fillStyle = '#4CAF50';
+                this.ctx.fillStyle = '#4CAF50'; // Cabeça - verde
             } else {
-                // 🐍 Corpo
-                this.ctx.fillStyle = '#8BC34A';
+                // 🎯 CORPO com gradiente sutil
+                const intensity = 1 - (index / this.snake.length) * 0.3;
+                this.ctx.fillStyle = `rgb(139, 195, 74, ${intensity})`;
             }
             
             this.ctx.fillRect(
@@ -410,11 +469,48 @@ export default class SnakeGame {
                 this.config.gridSize - 1,
                 this.config.gridSize - 1
             );
+            
+            // 🎯 DETALHES na cabeça
+            if (index === 0) {
+                this.drawSnakeEyes(segment);
+            }
         });
     }
 
-    // 🍎 Desenhar a comida
+    // 👀 Desenhar olhos (MELHORADO)
+    drawSnakeEyes(head) {
+        this.ctx.fillStyle = '#000';
+        const eyeSize = 3;
+        const offset = 5;
+        
+        let leftEye, rightEye;
+        
+        switch(this.direction) {
+            case 'right':
+                leftEye = { x: head.x * this.config.gridSize + this.config.gridSize - offset, y: head.y * this.config.gridSize + offset };
+                rightEye = { x: head.x * this.config.gridSize + this.config.gridSize - offset, y: head.y * this.config.gridSize + this.config.gridSize - offset };
+                break;
+            case 'left':
+                leftEye = { x: head.x * this.config.gridSize + offset, y: head.y * this.config.gridSize + offset };
+                rightEye = { x: head.x * this.config.gridSize + offset, y: head.y * this.config.gridSize + this.config.gridSize - offset };
+                break;
+            case 'up':
+                leftEye = { x: head.x * this.config.gridSize + offset, y: head.y * this.config.gridSize + offset };
+                rightEye = { x: head.x * this.config.gridSize + this.config.gridSize - offset, y: head.y * this.config.gridSize + offset };
+                break;
+            case 'down':
+                leftEye = { x: head.x * this.config.gridSize + offset, y: head.y * this.config.gridSize + this.config.gridSize - offset };
+                rightEye = { x: head.x * this.config.gridSize + this.config.gridSize - offset, y: head.y * this.config.gridSize + this.config.gridSize - offset };
+                break;
+        }
+        
+        this.ctx.fillRect(leftEye.x, leftEye.y, eyeSize, eyeSize);
+        this.ctx.fillRect(rightEye.x, rightEye.y, eyeSize, eyeSize);
+    }
+
+    // 🍎 Desenhar a comida (MAIS BONITA)
     drawFood() {
+        // 🎯 COMIDA com efeito visual
         this.ctx.fillStyle = '#FF5252';
         this.ctx.fillRect(
             this.food.x * this.config.gridSize,
@@ -422,14 +518,19 @@ export default class SnakeGame {
             this.config.gridSize - 1,
             this.config.gridSize - 1
         );
+        
+        // 🎯 BRILHO na comida
+        this.ctx.fillStyle = '#FF8A80';
+        this.ctx.fillRect(
+            this.food.x * this.config.gridSize + 3,
+            this.food.y * this.config.gridSize + 3,
+            this.config.gridSize - 7,
+            this.config.gridSize - 7
+        );
     }
 
-    // 📊 Desenhar interface do usuário
+    // 📊 Desenhar interface
     drawUI() {
-        this.ctx.fillStyle = '#FFFFFF';
-        this.ctx.font = '16px Arial';
-        
-        // Estado do jogo
         if (this.gameState === 'paused') {
             this.ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
             this.ctx.fillRect(0, 0, this.config.width, this.config.height);
@@ -442,24 +543,20 @@ export default class SnakeGame {
         }
     }
 
-    // 💀 Desenhar tela de Game Over
+    // 💀 Game Over
     drawGameOver() {
-        // Fundo semi-transparente
-        this.ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+        this.ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
         this.ctx.fillRect(0, 0, this.config.width, this.config.height);
         
-        // Texto de Game Over
         this.ctx.fillStyle = '#FF5252';
         this.ctx.font = 'bold 32px Arial';
         this.ctx.textAlign = 'center';
         this.ctx.fillText('GAME OVER', this.config.width / 2, this.config.height / 2 - 30);
         
-        // Pontuação final
         this.ctx.fillStyle = '#FFFFFF';
         this.ctx.font = '20px Arial';
         this.ctx.fillText(`Score: ${this.score}`, this.config.width / 2, this.config.height / 2 + 10);
         
-        // Instruções
         this.ctx.font = '16px Arial';
         this.ctx.fillText('Pressione R para reiniciar', this.config.width / 2, this.config.height / 2 + 50);
         
@@ -467,7 +564,6 @@ export default class SnakeGame {
     }
 
     destroy() {
-        console.log('🧹 Limpando recursos do Snake...');
         this.stop();
     }
 }
