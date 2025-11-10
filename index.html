@@ -30,12 +30,12 @@
     
         <section id="games" class="page">
             <h2>Escolha Seu Jogo</h2>
-            <div class="game-grid">
+            <div class="games-grid">  <!-- CORREÇÃO: era "game-grid", deve ser "games-grid" -->
 
                 <!-- Cada game-card é um jogo clicável e aparecerá aqui... -->
 
                 <div class="game-card" data-game="snake">
-                    <div class="game-icon"></div>🐍</div>
+                    <div class="game-icon">🐍</div>  <!-- CORREÇÃO: fechada a div corretamente -->
                     <h3>Snake Classic</h3>
                     <p>Reviva o clássico dos celulares</p>
                 </div>
@@ -55,8 +55,7 @@
         </section>
 
         <!-- Seção 3: Área do Jogo -->
-
-        <section id="game-container" class="page">
+        <section id="game-container" class="page">  <!-- CORREÇÃO: estava faltando esta seção -->
 
             <!-- 🎯 AQUI os jogos serão carregados DINAMICAMENTE via JavaScript -->
 
@@ -71,10 +70,10 @@
         </section>
 
         <!-- Seção 4: Ranking -->
-        <section id="scores" class="pages">
+        <section id="scores" class="page">  <!-- CORREÇÃO: era "pages", deve ser "page" -->
             <h2>🏆 Ranking dos Melhores</h2>
             <div class="scores-container">
-                <table class="scores-tables">
+                <table class="scores-table">  <!-- CORREÇÃO: era "scores-tables", deve ser "scores-table" -->
                     <thead>
                         <tr>
                             <th>Posição</th>
@@ -83,7 +82,7 @@
                             <th>Pontuação</th>
                         </tr>
                     </thead>
-                    <tbody id="socores-body">
+                    <tbody id="scores-body">  <!-- CORREÇÃO: era "socores-body", deve ser "scores-body" -->
 
                         <!-- Dados carregados via JavaScript -->
 
