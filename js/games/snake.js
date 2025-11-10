@@ -259,33 +259,59 @@ export default class SnakeGame {
         this.food = newFood;
     }
 
-    // 🚀 Game Loop Moderno
+    // 🚀 Game Loop Moderno - VERSÃO COMPLETAMENTE CORRIGIDA
     startSmoothGameLoop() {
-        if (this.gameState === 'stopped' || this.gameState === 'gameover') {
+        console.log('🎮 Iniciando/Reiniciando game loop...');
+        console.log('📊 Estado atual:', this.gameState);
+        
+        // 🛑 PARA qualquer loop existente
+        if (this.gameLoop) {
+            cancelAnimationFrame(this.gameLoop);
+            this.gameLoop = null;
+            console.log('🛑 Loop anterior cancelado');
+        }
+        
+        // 🎯 Só inicia se estiver em estado válido
+        if (this.gameState === 'stopped' || this.gameState === 'gameover' || this.gameState === 'paused') {
             this.gameState = 'running';
             this.lastUpdateTime = performance.now();
+            this.deltaTime = 0;
+            
+            console.log('✅ Estado alterado para: running');
             
             const gameLoop = (currentTime) => {
-                if (this.gameState !== 'running') return;
+                // 🎯 VERIFICA se ainda deve continuar
+                if (this.gameState !== 'running') {
+                    console.log('🛑 Parando loop - estado:', this.gameState);
+                    return;
+                }
                 
                 this.deltaTime = currentTime - this.lastUpdateTime;
                 
+                // 🎯 ATUALIZAÇÃO do jogo (lógica principal)
                 if (this.deltaTime >= this.config.speed) {
                     this.update();
                     this.lastUpdateTime = currentTime - (this.deltaTime % this.config.speed);
                 }
                 
-                // 🎯 ATUALIZA ANIMAÇÕES E PARTÍCULAS
+                // 🎯🎯🎯 CORREÇÃO CRÍTICA: Atualiza partículas e animações A CADA FRAME!
                 this.updateAnimations();
                 this.updateParticles();
                 
+                // 🎯 RENDERIZAÇÃO (sempre)
                 this.draw();
                 this.updateFPSCounter();
                 
+                // 🎯 CONTINUA o loop
                 this.gameLoop = requestAnimationFrame(gameLoop);
             };
             
+            // 🚀 INICIA o loop
             this.gameLoop = requestAnimationFrame(gameLoop);
+            console.log('✅ Game loop iniciado com sucesso!');
+            
+        } else {
+            console.log('⚠️ Não é possível iniciar loop no estado:', this.gameState);
         }
     }
 
@@ -297,14 +323,29 @@ export default class SnakeGame {
         });
     }
 
-    // ✨ ATUALIZA PARTÍCULAS
+    // ✨ ATUALIZA PARTÍCULAS - VERSÃO SUPER SEGURA
     updateParticles() {
-        this.particles = this.particles.filter(particle => {
+        // 🎯 Cria uma NOVA array só com partículas vivas
+        const aliveParticles = [];
+        
+        this.particles.forEach(particle => {
+            // 🎯 Atualiza posição
             particle.x += particle.vx;
             particle.y += particle.vy;
             particle.life--;
-            return particle.life > 0;
+            
+            // 🎯 VERIFICAÇÃO EXTRA: só adiciona se estiver VIVA e DENTRO da tela
+            const isAlive = particle.life > 0;
+            const isOnScreen = particle.x > -10 && particle.x < this.config.width + 10 && 
+                              particle.y > -10 && particle.y < this.config.height + 10;
+            
+            if (isAlive && isOnScreen) {
+                aliveParticles.push(particle);
+            }
         });
+        
+        // 🎯 SUBSTITUI a array antiga pela nova
+        this.particles = aliveParticles;
     }
 
     updateFPSCounter() {
@@ -315,18 +356,31 @@ export default class SnakeGame {
         }
     }
 
-    // ⏸️ Pausar/Despausar
+    // ⏸️ Pausar/Despausar - VERSÃO SIMPLES E FUNCIONAL
     togglePause() {
+        console.log('🎮 Pause/Despause solicitado');
+        console.log('📊 Estado antes:', this.gameState);
+        
         if (this.gameState === 'running') {
+            // 🛑 PAUSAR
             this.gameState = 'paused';
             if (this.gameLoop) {
                 cancelAnimationFrame(this.gameLoop);
                 this.gameLoop = null;
             }
-            this.draw();
+            console.log('✅ Jogo pausado');
+            this.draw(); // Mostra tela de pausa
+            
         } else if (this.gameState === 'paused') {
+            // ▶️ DESPAUSAR - simplesmente reinicia o loop
+            console.log('▶️ Reiniciando game loop...');
             this.startSmoothGameLoop();
+            
+        } else {
+            console.log('⚠️ Estado inválido para pausa:', this.gameState);
         }
+        
+        console.log('📊 Estado depois:', this.gameState);
     }
 
     // ⏹️ Parar o jogo
@@ -368,29 +422,32 @@ export default class SnakeGame {
         }
     }
 
-    // ✨ CRIAR PARTÍCULAS ao comer comida
+    // ✨ CRIAR PARTÍCULAS - VERSÃO CONTROLADA
     createFoodParticles() {
         const foodX = this.food.x * this.config.gridSize + this.config.gridSize / 2;
         const foodY = this.food.y * this.config.gridSize + this.config.gridSize / 2;
         
-        for (let i = 0; i < 8; i++) {
+        console.log(`🍎 Criando partículas em: (${foodX}, ${foodY})`);
+        
+        // 🎯 LIMPEZA TOTAL antes de criar novas
+        this.particles = [];
+        
+        // 🎯 Número controlado de partículas
+        const particleCount = 6;
+        
+        for (let i = 0; i < particleCount; i++) {
             this.particles.push({
                 x: foodX,
                 y: foodY,
-                vx: (Math.random() - 0.5) * 4,
-                vy: (Math.random() - 0.5) * 4,
-                life: 30,
-                color: this.getParticleColor()
+                vx: (Math.random() - 0.5) * 3, // 🎯 Velocidade reduzida
+                vy: (Math.random() - 0.5) * 3,
+                life: 25, // 🎯 Vida mais curta
+                color: this.getParticleColor(),
+                id: Date.now() + i // 🎯 ID único para debug
             });
         }
         
-        // 🎯 ANIMAÇÃO de crescimento
-        this.animations.push({
-            type: 'grow',
-            progress: 0,
-            x: foodX,
-            y: foodY
-        });
+        console.log(`✨ Criadas ${this.particles.length} partículas`);
     }
 
     // 🎨 COR das partículas baseada no tipo de comida
@@ -721,15 +778,31 @@ export default class SnakeGame {
         this.ctx.stroke();
     }
 
-    // ✨ PARTÍCULAS
+    // ✨ PARTÍCULAS - DESENHO CORRIGIDO
     drawParticles() {
+        // 🎯 RETORNA IMEDIATAMENTE se não há partículas
+        if (!this.particles || this.particles.length === 0) {
+            return;
+        }
+        
         this.particles.forEach(particle => {
+            // 🎯 VERIFICAÇÃO DUPLA: só desenha se estiver viva
+            if (particle.life <= 0) return;
+            
+            // 🎯 Calcula opacidade e tamanho
+            const progress = particle.life / 25; // Vida máxima é 25
+            const opacity = Math.max(0, progress);
+            const size = Math.max(0.5, 2 * progress);
+            
             this.ctx.fillStyle = particle.color;
-            this.ctx.globalAlpha = particle.life / 30;
+            this.ctx.globalAlpha = opacity;
+            
             this.ctx.beginPath();
-            this.ctx.arc(particle.x, particle.y, 2, 0, Math.PI * 2);
+            this.ctx.arc(particle.x, particle.y, size, 0, Math.PI * 2);
             this.ctx.fill();
         });
+        
+        // 🎯 GARANTE que a opacidade volta ao normal
         this.ctx.globalAlpha = 1;
     }
 
