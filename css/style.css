@@ -665,3 +665,23 @@ body.mobile-controls #game-canvas {
 .touch-btn:active {
     animation: touchFeedback 0.1s ease;
 }
+
+/* 📱 INDICADOR MOBILE */
+.mobile-indicator {
+    background: linear-gradient(135deg, #4CAF50, #2196F3);
+    color: white;
+    padding: 8px 15px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: bold;
+    text-align: center;
+    margin-top: 10px;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.2);
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { opacity: 0.7; }
+    50% { opacity: 1; }
+    100% { opacity: 0.7; }
+}

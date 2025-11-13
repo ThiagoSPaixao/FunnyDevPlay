@@ -107,52 +107,62 @@ export default class SnakeGame {
     }
 
     // 🎮 CONTROLES PREMIUM
-    createPremiumControls() {
-        const controlsDiv = document.createElement('div');
-        controlsDiv.className = 'game-controls premium-controls';
-        controlsDiv.innerHTML = `
-            <div class="controls-header">
-                <h3>🐍 Snake Premium</h3>
+    // 🎮 CONTROLES PREMIUM - VERSÃO ATUALIZADA COM TOUCH
+createPremiumControls() {
+    const controlsDiv = document.createElement('div');
+    controlsDiv.className = 'game-controls premium-controls';
+    controlsDiv.innerHTML = `
+        <div class="controls-header">
+            <h3>🐍 Snake Premium</h3>
+        </div>
+        <div class="controls-row">
+            <button id="start-btn" class="control-btn premium-btn">▶️ Iniciar</button>
+            <button id="pause-btn" class="control-btn premium-btn">⏸️ Pausar</button>
+            <button id="reset-btn" class="control-btn premium-btn">🔄 Reiniciar</button>
+        </div>
+        <div class="stats-container">
+            <div class="stat-box">
+                <span class="stat-label">Score</span>
+                <span id="current-score" class="stat-value">0</span>
             </div>
-            <div class="controls-row">
-                <button id="start-btn" class="control-btn premium-btn">▶️ Iniciar</button>
-                <button id="pause-btn" class="control-btn premium-btn">⏸️ Pausar</button>
-                <button id="reset-btn" class="control-btn premium-btn">🔄 Reiniciar</button>
+            <div class="stat-box">
+                <span class="stat-label">Recorde</span>
+                <span id="high-score" class="stat-value">0</span>
             </div>
-            <div class="stats-container">
-                <div class="stat-box">
-                    <span class="stat-label">Score</span>
-                    <span id="current-score" class="stat-value">0</span>
-                </div>
-                <div class="stat-box">
-                    <span class="stat-label">Recorde</span>
-                    <span id="high-score" class="stat-value">0</span>
-                </div>
-                <div class="stat-box">
-                    <span class="stat-label">FPS</span>
-                    <span id="fps-counter" class="stat-value">0</span>
-                </div>
-                <div class="stat-box">
-                    <span class="stat-label">Tamanho</span>
-                    <span id="snake-size" class="stat-value">3</span>
-                </div>
+            <div class="stat-box">
+                <span class="stat-label">FPS</span>
+                <span id="fps-counter" class="stat-value">0</span>
             </div>
-            <div class="speed-controls">
-                <label for="speed-slider" class="speed-label">🎚️ Velocidade:</label>
-                <input type="range" id="speed-slider" min="50" max="200" value="100" class="speed-slider">
-                <span id="speed-value" class="speed-value">Normal</span>
+            <div class="stat-box">
+                <span class="stat-label">Tamanho</span>
+                <span id="snake-size" class="stat-value">3</span>
             </div>
-            <div class="premium-features">
-                <div class="feature-tag">✨ Gráficos HD</div>
-                <div class="feature-tag">🎯 Controles Suaves</div>
-                <div class="feature-tag">🌟 Efeitos Visuais</div>
-            </div>
-        `;
+        </div>
+        <div class="speed-controls">
+            <label for="speed-slider" class="speed-label">🎚️ Velocidade:</label>
+            <input type="range" id="speed-slider" min="50" max="200" value="100" class="speed-slider">
+            <span id="speed-value" class="speed-value">Normal</span>
+        </div>
+        <div class="premium-features">
+            <div class="feature-tag">✨ Gráficos HD</div>
+            <div class="feature-tag">🎯 Controles Suaves</div>
+            <div class="feature-tag">🌟 Efeitos Visuais</div>
+            <div class="feature-tag">📱 Controles Touch</div>  <!-- 🆕 NOVO FEATURE TAG -->
+        </div>
         
-        this.canvas.parentNode.insertBefore(controlsDiv, this.canvas.nextSibling);
-        this.setupControlButtons();
-        this.setupSpeedControl();
-    }
+        <!-- 🆕 NOVO: Indicador de controles mobile -->
+        <div class="mobile-indicator" id="mobile-indicator" style="display: none;">
+            📱 Controles Touch Ativos
+        </div>
+    `;
+    
+    this.canvas.parentNode.insertBefore(controlsDiv, this.canvas.nextSibling);
+    this.setupControlButtons();
+    this.setupSpeedControl();
+    
+    // 🆕 NOVA LINHA: Configura controles touch automaticamente
+    this.setupTouchControls();
+}
 
     setupControlButtons() {
         document.getElementById('start-btn').addEventListener('click', () => {
