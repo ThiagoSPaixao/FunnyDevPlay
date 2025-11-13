@@ -185,11 +185,156 @@ export default class SnakeGame {
     }
 
     // ⌨️ Controles
-    setupControls() {
-        document.addEventListener('keydown', (event) => {
-            this.handleKeyPress(event);
+    // ⌨️ Controles - VERSÃO COMPLETA COM TOUCH
+setupControls() {
+    // 🎯 Controles de teclado
+    document.addEventListener('keydown', (event) => {
+        this.handleKeyPress(event);
+    });
+    
+    // 📱 Controles Touch para mobile
+    this.setupTouchControls();
+}
+
+// 📱 CONFIGURAR CONTROLES TOUCH
+setupTouchControls() {
+    console.log('📱 Configurando controles touch...');
+    
+    // 🎯 Cria os controles touch na tela
+    this.createTouchControls();
+    
+    // 🎯 Eventos de touch para swipes
+    this.setupTouchEvents();
+}
+
+// 🎮 CRIAR CONTROLES VIRTUAIS NA TELA
+createTouchControls() {
+    // 🎯 Verifica se é mobile
+    if (!this.isMobileDevice()) return;
+    
+    const gameContainer = document.getElementById('game-container');
+    
+    // 🎯 Cria container dos controles touch
+    const touchControls = document.createElement('div');
+    touchControls.className = 'touch-controls';
+    touchControls.innerHTML = `
+        <div class="d-pad">
+            <div class="d-pad-row">
+                <button class="touch-btn up" data-direction="up">⬆️</button>
+            </div>
+            <div class="d-pad-row">
+                <button class="touch-btn left" data-direction="left">⬅️</button>
+                <button class="touch-btn center">○</button>
+                <button class="touch-btn right" data-direction="right">➡️</button>
+            </div>
+            <div class="d-pad-row">
+                <button class="touch-btn down" data-direction="down">⬇️</button>
+            </div>
+        </div>
+        <div class="action-buttons">
+            <button class="action-btn pause" id="touch-pause">⏸️</button>
+            <button class="action-btn restart" id="touch-restart">🔄</button>
+        </div>
+    `;
+    
+    gameContainer.appendChild(touchControls);
+    
+    // 🎯 Configura eventos dos botões touch
+    this.setupTouchButtons();
+}
+
+// 🎯 CONFIGURAR BOTÕES TOUCH
+setupTouchButtons() {
+    // 🎯 Botões de direção
+    const touchButtons = document.querySelectorAll('.touch-btn[data-direction]');
+    touchButtons.forEach(btn => {
+        btn.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            const direction = btn.getAttribute('data-direction');
+            this.handleTouchDirection(direction);
         });
+        
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            const direction = btn.getAttribute('data-direction');
+            this.handleTouchDirection(direction);
+        });
+    });
+    
+    // 🎯 Botões de ação
+    document.getElementById('touch-pause').addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        this.togglePause();
+    });
+    
+    document.getElementById('touch-restart').addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        this.reset();
+        this.startSmoothGameLoop();
+    });
+}
+
+// 📱 EVENTOS DE SWIPE
+setupTouchEvents() {
+    let touchStartX = 0;
+    let touchStartY = 0;
+    
+    this.canvas.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        touchStartX = e.touches[0].clientX;
+        touchStartY = e.touches[0].clientY;
+    });
+    
+    this.canvas.addEventListener('touchmove', (e) => {
+        e.preventDefault();
+    });
+    
+    this.canvas.addEventListener('touchend', (e) => {
+        e.preventDefault();
+        
+        const touchEndX = e.changedTouches[0].clientX;
+        const touchEndY = e.changedTouches[0].clientY;
+        
+        const diffX = touchEndX - touchStartX;
+        const diffY = touchEndY - touchStartY;
+        
+        // 🎯 Detecta a direção do swipe
+        if (Math.abs(diffX) > Math.abs(diffY)) {
+            // Swipe horizontal
+            if (diffX > 30 && this.direction !== 'left') {
+                this.nextDirection = 'right';
+            } else if (diffX < -30 && this.direction !== 'right') {
+                this.nextDirection = 'left';
+            }
+        } else {
+            // Swipe vertical
+            if (diffY > 30 && this.direction !== 'up') {
+                this.nextDirection = 'down';
+            } else if (diffY < -30 && this.direction !== 'down') {
+                this.nextDirection = 'up';
+            }
+        }
+    });
+}
+
+// 🎯 MANIPULAR DIREÇÃO TOUCH
+handleTouchDirection(direction) {
+    if (this.gameState !== 'running') return;
+    
+    // 🎯 Previne mudanças de direção opostas
+    if ((direction === 'up' && this.direction !== 'down') ||
+        (direction === 'down' && this.direction !== 'up') ||
+        (direction === 'left' && this.direction !== 'right') ||
+        (direction === 'right' && this.direction !== 'left')) {
+        this.nextDirection = direction;
     }
+}
+
+// 📱 DETECTAR SE É DISPOSITIVO MOBILE
+isMobileDevice() {
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+        window.innerWidth <= 768;
+}
 
     handleKeyPress(event) {
         let newDirection = null;
