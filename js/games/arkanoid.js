@@ -1,12 +1,12 @@
-// 🏓 ARKANOID - VERSÃO SIMPLIFICADA E FUNCIONAL
+// 🏓 ARKANOID PREMIUM - VERSÃO COMPLETA MOBILE
 
 export default class ArkanoidGame {
     constructor() {
         // 🏷️ Identificação do jogo
-        this.name = "Arkanoid";
-        this.version = "1.0";
+        this.name = "Arkanoid Premium";
+        this.version = "2.1";
         
-        // 🎯 CONFIGURAÇÕES BÁSICAS
+        // 🎯 CONFIGURAÇÕES
         this.config = {
             width: 800,
             height: 600,
@@ -21,11 +21,17 @@ export default class ArkanoidGame {
         this.score = 0;
         this.lives = 3;
         this.level = 1;
+        this.highScore = localStorage.getItem('arkanoidHighScore') || 0;
         
         // 🏓 Elementos do jogo
         this.paddle = null;
-        this.ball = null;
+        this.balls = [];
         this.bricks = [];
+        
+        // 📱 Mobile
+        this.isMobile = this.detectMobile();
+        this.touchX = 0;
+        this.isTouching = false;
         
         // 🔧 Referências
         this.canvas = null;
@@ -36,33 +42,32 @@ export default class ArkanoidGame {
         this.keys = {};
         this.mouseX = 0;
         
-        console.log('🏓 Arkanoid criado!');
+        console.log('🏓 Arkanoid Premium criado!');
+    }
+
+    // 📱 DETECTAR MOBILE
+    detectMobile() {
+        return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+            window.innerWidth <= 768;
     }
 
     async init() {
-        console.log('🎮 Inicializando Arkanoid...');
+        console.log('🎮 Inicializando Arkanoid Premium...');
         
         try {
-            // Configuração do canvas
             this.canvas = document.getElementById('game-canvas');
             this.ctx = this.canvas.getContext('2d');
             
-            // Define tamanho fixo do canvas
-            this.canvas.width = this.config.width;
-            this.canvas.height = this.config.height;
+            // Configuração responsiva
+            this.setupResponsiveCanvas();
             
             console.log('📐 Canvas configurado:', this.canvas.width, 'x', this.canvas.height);
             
-            // Cria interface do jogo
             this.createGameInterface();
-            
-            // Configura controles
             this.setupControls();
-            
-            // Inicializa o jogo
             this.reset();
             
-            console.log('✅ Arkanoid inicializado!');
+            console.log('✅ Arkanoid Premium inicializado!');
             
         } catch (error) {
             console.error('❌ Erro ao inicializar Arkanoid:', error);
@@ -70,17 +75,38 @@ export default class ArkanoidGame {
         }
     }
 
+    // 🎯 CONFIGURAR CANVAS RESPONSIVO
+    setupResponsiveCanvas() {
+        if (this.isMobile) {
+            const maxWidth = Math.min(800, window.innerWidth * 0.95);
+            const scale = maxWidth / this.config.width;
+            
+            this.canvas.style.width = `${maxWidth}px`;
+            this.canvas.style.height = `${this.config.height * scale}px`;
+            
+            // Canvas nativo
+            this.canvas.width = maxWidth;
+            this.canvas.height = this.config.height * scale;
+            
+            // Atualiza configurações
+            this.config.width = maxWidth;
+            this.config.height = this.config.height * scale;
+            this.config.paddleWidth = maxWidth * 0.125;
+            this.config.ballSize = maxWidth * 0.0125;
+        } else {
+            this.canvas.width = this.config.width;
+            this.canvas.height = this.config.height;
+        }
+    }
+
     // 🎨 CRIAR INTERFACE DO JOGO
     createGameInterface() {
         const gameContainer = document.getElementById('game-container');
         
-        // Limpa container antes de adicionar
-        gameContainer.innerHTML = '';
-        
-        const gameHTML = `
+        gameContainer.innerHTML = `
             <div class="arkanoid-game">
                 <div class="arkanoid-header">
-                    <h2>🏓 Arkanoid</h2>
+                    <h2>🏓 Arkanoid ${this.isMobile ? '📱' : ''}</h2>
                 </div>
 
                 <div class="arkanoid-stats">
@@ -96,6 +122,10 @@ export default class ArkanoidGame {
                         <span class="stat-label">Lives</span>
                         <span id="arkanoid-lives" class="stat-value">3</span>
                     </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Recorde</span>
+                        <span id="arkanoid-highscore" class="stat-value">${this.highScore}</span>
+                    </div>
                 </div>
 
                 <div class="arkanoid-container">
@@ -103,7 +133,7 @@ export default class ArkanoidGame {
                     <div id="pause-overlay" class="pause-overlay" style="display: none;">
                         <div class="pause-content">
                             <div class="pause-title">⏸️ PAUSED</div>
-                            <div class="pause-subtitle">Click to continue</div>
+                            <div class="pause-subtitle">${this.isMobile ? 'Tap' : 'Click'} to continue</div>
                         </div>
                     </div>
                 </div>
@@ -114,20 +144,35 @@ export default class ArkanoidGame {
                         <button id="arkanoid-pause" class="arkanoid-btn">⏸️ Pausar</button>
                         <button id="arkanoid-reset" class="arkanoid-btn">🔄 Reiniciar</button>
                     </div>
-                    <div style="margin-top: 10px; color: white; font-size: 14px;">
-                        Controles: Mouse ou Setas ← →
+                    <div style="margin-top: 10px; color: white; font-size: 14px; text-align: center;">
+                        ${this.isMobile ? 
+                          'Controles: Arraste na tela para mover' : 
+                          'Controles: Mouse ou Setas ← →'
+                        }
                     </div>
                 </div>
             </div>
+
+            ${this.isMobile ? `
+            <div class="touch-controls">
+                <div class="touch-pad" id="touch-pad">
+                    <div style="color: rgba(255,255,255,0.7); text-align: center; padding: 25px; font-size: 14px;">
+                        ⬅️ Arraste para mover ➡️
+                    </div>
+                </div>
+            </div>
+            ` : ''}
         `;
         
-        gameContainer.insertAdjacentHTML('beforeend', gameHTML);
-        
-        // Re-configura o canvas após criar a interface
         this.canvas = document.getElementById('game-canvas');
         this.ctx = this.canvas.getContext('2d');
-        this.canvas.width = this.config.width;
-        this.canvas.height = this.config.height;
+        
+        if (this.isMobile) {
+            this.setupResponsiveCanvas();
+        } else {
+            this.canvas.width = this.config.width;
+            this.canvas.height = this.config.height;
+        }
         
         this.setupGameControls();
     }
@@ -135,7 +180,6 @@ export default class ArkanoidGame {
     // 🎮 CONFIGURAR CONTROLES DO JOGO
     setupGameControls() {
         document.getElementById('arkanoid-start').addEventListener('click', () => {
-            console.log('🎯 Botão Iniciar clicado');
             this.startGame();
         });
         
@@ -146,30 +190,95 @@ export default class ArkanoidGame {
         document.getElementById('arkanoid-reset').addEventListener('click', () => {
             this.reset();
         });
+
+        // 📱 Eventos touch para botões
+        if (this.isMobile) {
+            const buttons = document.querySelectorAll('.arkanoid-btn');
+            buttons.forEach(btn => {
+                btn.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    btn.click();
+                });
+            });
+        }
     }
 
     // ⌨️ CONFIGURAR CONTROLES
     setupControls() {
-        // Controles de teclado
-        document.addEventListener('keydown', (e) => {
-            this.keys[e.key] = true;
-        });
+        // Controles de teclado (apenas desktop)
+        if (!this.isMobile) {
+            document.addEventListener('keydown', (e) => {
+                this.keys[e.key] = true;
+            });
+            
+            document.addEventListener('keyup', (e) => {
+                this.keys[e.key] = false;
+            });
+            
+            this.canvas.addEventListener('mousemove', (e) => {
+                const rect = this.canvas.getBoundingClientRect();
+                this.mouseX = e.clientX - rect.left;
+            });
+        }
         
-        document.addEventListener('keyup', (e) => {
-            this.keys[e.key] = false;
-        });
-        
-        // Controles de mouse
-        this.canvas.addEventListener('mousemove', (e) => {
-            const rect = this.canvas.getBoundingClientRect();
-            this.mouseX = e.clientX - rect.left;
-        });
-        
+        // Click para pause
         this.canvas.addEventListener('click', (e) => {
             if (this.gameState === 'paused') {
                 this.togglePause();
             }
         });
+
+        // 📱 CONFIGURAR CONTROLES TOUCH
+        if (this.isMobile) {
+            this.setupTouchControls();
+        }
+    }
+
+    // 📱 CONFIGURAR CONTROLES TOUCH
+    setupTouchControls() {
+        const touchPad = document.getElementById('touch-pad');
+        let isDragging = false;
+
+        touchPad.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            isDragging = true;
+            this.isTouching = true;
+            this.updatePaddleFromTouch(e.touches[0]);
+        });
+
+        touchPad.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            if (isDragging) {
+                this.updatePaddleFromTouch(e.touches[0]);
+            }
+        });
+
+        touchPad.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            isDragging = false;
+            this.isTouching = false;
+        });
+
+        // Também permite tocar diretamente no canvas
+        this.canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            this.updatePaddleFromTouch(e.touches[0]);
+        });
+
+        this.canvas.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            this.updatePaddleFromTouch(e.touches[0]);
+        });
+    }
+
+    // 📱 ATUALIZAR PLATAFORMA POR TOUCH
+    updatePaddleFromTouch(touch) {
+        const rect = this.canvas.getBoundingClientRect();
+        const touchX = touch.clientX - rect.left;
+        
+        // Converte coordenada de touch para coordenada do canvas
+        const canvasX = (touchX / this.canvas.clientWidth) * this.config.width;
+        this.updatePaddlePosition(canvasX);
     }
 
     // 🔄 REINICIAR JOGO
@@ -238,7 +347,12 @@ export default class ArkanoidGame {
 
     // 🎮 PROCESSAR INPUT
     processInput() {
-        // Teclado
+        if (this.isMobile) {
+            // Em mobile, usa apenas touch (já processado nos event listeners)
+            return;
+        }
+        
+        // Desktop: teclado e mouse
         if (this.keys['ArrowLeft'] || this.keys['a'] || this.keys['A']) {
             this.paddle.x -= 8;
         }
@@ -246,12 +360,10 @@ export default class ArkanoidGame {
             this.paddle.x += 8;
         }
         
-        // Mouse (prioridade)
         if (this.mouseX > 0) {
             this.paddle.x = this.mouseX - this.paddle.width / 2;
         }
         
-        // Mantém paddle dentro dos limites
         this.paddle.x = Math.max(0, Math.min(this.config.width - this.paddle.width, this.paddle.x));
     }
 
@@ -262,104 +374,112 @@ export default class ArkanoidGame {
 
     // 🎾 ATUALIZAR BOLA
     updateBall() {
-        if (!this.ball) return;
-        
-        this.ball.x += this.ball.dx;
-        this.ball.y += this.ball.dy;
-        
-        // Colisão com paredes
-        if (this.ball.x <= 0 || this.ball.x >= this.config.width - this.ball.size) {
-            this.ball.dx = -this.ball.dx;
-        }
-        
-        // Colisão com teto
-        if (this.ball.y <= 0) {
-            this.ball.dy = -this.ball.dy;
-        }
-        
-        // Colisão com chão (perde vida)
-        if (this.ball.y >= this.config.height) {
-            this.loseLife();
+        for (let i = this.balls.length - 1; i >= 0; i--) {
+            const ball = this.balls[i];
+            
+            ball.x += ball.dx;
+            ball.y += ball.dy;
+            
+            // Colisão com paredes
+            if (ball.x <= 0 || ball.x >= this.config.width - ball.size) {
+                ball.dx = -ball.dx;
+            }
+            
+            // Colisão com teto
+            if (ball.y <= 0) {
+                ball.dy = -ball.dy;
+            }
+            
+            // Colisão com chão (perde vida)
+            if (ball.y >= this.config.height) {
+                this.balls.splice(i, 1);
+                
+                // Se não há mais bolas, perde vida
+                if (this.balls.length === 0) {
+                    this.loseLife();
+                }
+                continue;
+            }
         }
     }
 
     // 🚨 VERIFICAR COLISÕES
     checkCollisions() {
-        if (!this.ball) return;
-        
-        // Colisão com plataforma
-        if (this.checkPaddleCollision()) {
-            this.handlePaddleCollision();
-        }
-        
-        // Colisão com blocos
-        this.checkBrickCollisions();
+        this.balls.forEach(ball => {
+            // Colisão com plataforma
+            if (this.checkPaddleCollision(ball)) {
+                this.handlePaddleCollision(ball);
+            }
+            
+            // Colisão com blocos
+            this.checkBrickCollisions(ball);
+        });
     }
 
     // 🏓 VERIFICAR COLISÃO COM PLATAFORMA
-    checkPaddleCollision() {
-        return this.ball.x + this.ball.size > this.paddle.x &&
-               this.ball.x < this.paddle.x + this.paddle.width &&
-               this.ball.y + this.ball.size > this.paddle.y &&
-               this.ball.y < this.paddle.y + this.paddle.height;
+    checkPaddleCollision(ball) {
+        return ball.x + ball.size > this.paddle.x &&
+               ball.x < this.paddle.x + this.paddle.width &&
+               ball.y + ball.size > this.paddle.y &&
+               ball.y < this.paddle.y + this.paddle.height;
     }
 
     // 🎯 MANIPULAR COLISÃO COM PLATAFORMA
-    handlePaddleCollision() {
+    handlePaddleCollision(ball) {
         // Calcula ponto de impacto na plataforma
-        const hitPos = (this.ball.x - (this.paddle.x + this.paddle.width / 2)) / (this.paddle.width / 2);
+        const hitPos = (ball.x - (this.paddle.x + this.paddle.width / 2)) / (this.paddle.width / 2);
         
         // Ângulo baseado no ponto de impacto
         const angle = hitPos * Math.PI / 3; // ±60 graus
         
         // Nova direção
-        this.ball.dx = Math.sin(angle) * this.config.ballSpeed;
-        this.ball.dy = -Math.cos(angle) * this.config.ballSpeed;
+        ball.dx = Math.sin(angle) * this.config.ballSpeed;
+        ball.dy = -Math.cos(angle) * this.config.ballSpeed;
         
         // Garante que a bola saia da plataforma
-        this.ball.y = this.paddle.y - this.ball.size;
+        ball.y = this.paddle.y - ball.size;
     }
 
     // 🧱 VERIFICAR COLISÕES COM BLOCOS
-    checkBrickCollisions() {
+    checkBrickCollisions(ball) {
         for (let i = this.bricks.length - 1; i >= 0; i--) {
             const brick = this.bricks[i];
             
-            if (this.checkBrickCollision(brick)) {
-                this.handleBrickCollision(brick, i);
+            if (this.checkBrickCollision(ball, brick)) {
+                this.handleBrickCollision(ball, brick, i);
                 break; // Uma colisão por frame
             }
         }
     }
 
     // 🔍 VERIFICAR COLISÃO COM BLOCO ESPECÍFICO
-    checkBrickCollision(brick) {
-        return this.ball.x + this.ball.size > brick.x &&
-               this.ball.x < brick.x + brick.width &&
-               this.ball.y + this.ball.size > brick.y &&
-               this.ball.y < brick.y + brick.height;
+    checkBrickCollision(ball, brick) {
+        return ball.x + ball.size > brick.x &&
+               ball.x < brick.x + brick.width &&
+               ball.y + ball.size > brick.y &&
+               ball.y < brick.y + brick.height;
     }
 
     // 💥 MANIPULAR COLISÃO COM BLOCO
-    handleBrickCollision(brick, brickIndex) {
+    handleBrickCollision(ball, brick, brickIndex) {
         // Determina direção da colisão
-        const ballCenterX = this.ball.x + this.ball.size / 2;
-        const ballCenterY = this.ball.y + this.ball.size / 2;
+        const ballCenterX = ball.x + ball.size / 2;
+        const ballCenterY = ball.y + ball.size / 2;
         const brickCenterX = brick.x + brick.width / 2;
         const brickCenterY = brick.y + brick.height / 2;
         
         const dx = ballCenterX - brickCenterX;
         const dy = ballCenterY - brickCenterY;
-        const width = (this.ball.size + brick.width) / 2;
-        const height = (this.ball.size + brick.height) / 2;
+        const width = (ball.size + brick.width) / 2;
+        const height = (ball.size + brick.height) / 2;
         const crossWidth = width * dy;
         const crossHeight = height * dx;
         
         if (Math.abs(dx) <= width && Math.abs(dy) <= height) {
             if (crossWidth > crossHeight) {
-                this.ball.dy = -this.ball.dy; // Colisão vertical
+                ball.dy = -ball.dy; // Colisão vertical
             } else {
-                this.ball.dx = -this.ball.dx; // Colisão horizontal
+                ball.dx = -ball.dx; // Colisão horizontal
             }
         }
         
@@ -396,14 +516,14 @@ export default class ArkanoidGame {
 
     // 🎾 INICIALIZAR BOLA
     initBall() {
-        this.ball = {
+        this.balls = [{
             x: this.config.width / 2,
             y: this.config.height - 60,
             dx: (Math.random() - 0.5) * this.config.ballSpeed,
             dy: -this.config.ballSpeed,
             size: this.config.ballSize,
             color: '#FFFFFF'
-        };
+        }];
     }
 
     // 🧱 CRIAR BLOCOS
@@ -411,7 +531,7 @@ export default class ArkanoidGame {
         this.bricks = [];
         const rows = 5;
         const cols = 8;
-        const brickWidth = 80;
+        const brickWidth = this.config.width * 0.1; // 10% da largura
         const brickHeight = 30;
         const padding = 5;
         
@@ -453,6 +573,15 @@ export default class ArkanoidGame {
         console.log('🎉 Level complete! Moving to level', this.level);
     }
 
+    // 🏓 ATUALIZAR POSIÇÃO DA PLATAFORMA
+    updatePaddlePosition(x) {
+        if (!this.paddle) return;
+        
+        let newX = x - this.paddle.width / 2;
+        newX = Math.max(0, Math.min(this.config.width - this.paddle.width, newX));
+        this.paddle.x = newX;
+    }
+
     // ⏸️ PAUSAR/DESPAUSAR
     togglePause() {
         if (this.gameState === 'running') {
@@ -479,14 +608,22 @@ export default class ArkanoidGame {
     gameOver() {
         this.stopGame();
         
+        // Atualiza high score
+        if (this.score > this.highScore) {
+            this.highScore = this.score;
+            localStorage.setItem('arkanoidHighScore', this.highScore);
+        }
+        
         // Salva score
         if (window.gamePlatform) {
             window.gamePlatform.saveScore('Jogador', 'arkanoid', this.score);
         }
         
-        alert(`💀 Game Over!\nScore: ${this.score}\nLevel: ${this.level}`);
-        
-        this.reset();
+        // Mostra alerta
+        setTimeout(() => {
+            alert(`💀 Game Over!\nScore: ${this.score}\nLevel: ${this.level}`);
+            this.reset();
+        }, 500);
     }
 
     // 🖼️ DESENHAR JOGO
@@ -542,28 +679,25 @@ export default class ArkanoidGame {
 
     // 🎾 DESENHAR BOLA
     drawBall() {
-        if (!this.ball) return;
-        
-        this.ctx.fillStyle = this.ball.color;
-        this.ctx.beginPath();
-        this.ctx.arc(this.ball.x + this.ball.size / 2, this.ball.y + this.ball.size / 2, this.ball.size / 2, 0, Math.PI * 2);
-        this.ctx.fill();
-        
-        // Borda
-        this.ctx.strokeStyle = '#000';
-        this.ctx.lineWidth = 1;
-        this.ctx.stroke();
+        this.balls.forEach(ball => {
+            this.ctx.fillStyle = ball.color;
+            this.ctx.beginPath();
+            this.ctx.arc(ball.x + ball.size / 2, ball.y + ball.size / 2, ball.size / 2, 0, Math.PI * 2);
+            this.ctx.fill();
+            
+            // Borda
+            this.ctx.strokeStyle = '#000';
+            this.ctx.lineWidth = 1;
+            this.ctx.stroke();
+        });
     }
 
     // 📊 ATUALIZAR DISPLAY
     updateGameDisplay() {
-        const scoreElement = document.getElementById('arkanoid-score');
-        const levelElement = document.getElementById('arkanoid-level');
-        const livesElement = document.getElementById('arkanoid-lives');
-        
-        if (scoreElement) scoreElement.textContent = this.score;
-        if (levelElement) levelElement.textContent = this.level;
-        if (livesElement) livesElement.textContent = this.lives;
+        document.getElementById('arkanoid-score').textContent = this.score;
+        document.getElementById('arkanoid-level').textContent = this.level;
+        document.getElementById('arkanoid-lives').textContent = this.lives;
+        document.getElementById('arkanoid-highscore').textContent = this.highScore;
     }
 
     // 🧹 DESTRUIR JOGO

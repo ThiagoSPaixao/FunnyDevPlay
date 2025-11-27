@@ -150,3 +150,146 @@ button:focus {
     outline: 2px solid #4CAF50;
     outline-offset: 2px;
 }
+
+/* 📱 ESTILOS MOBILE PARA TETRIS E ARKANOID */
+
+@media (max-width: 768px) {
+    .tetris-container {
+        flex-direction: column;
+        align-items: center;
+        gap: 15px;
+    }
+    
+    .side-panels {
+        flex-direction: row;
+        justify-content: center;
+        gap: 20px;
+        order: 2;
+    }
+    
+    .game-area {
+        order: 1;
+    }
+    
+    .preview-panel, .hold-panel {
+        min-width: 80px;
+        padding: 10px;
+    }
+    
+    .preview-canvas, .hold-canvas {
+        width: 60px;
+        height: 60px;
+    }
+    
+    .control-buttons {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+    }
+    
+    .tetris-btn {
+        padding: 10px 15px;
+        font-size: 0.8rem;
+    }
+    
+    /* Touch Controls */
+    .touch-controls {
+        display: flex !important;
+        position: fixed;
+        bottom: 20px;
+        left: 0;
+        right: 0;
+        justify-content: space-between;
+        padding: 0 15px;
+        z-index: 100;
+    }
+    
+    .touch-section {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    .touch-row {
+        display: flex;
+        gap: 8px;
+        justify-content: center;
+    }
+    
+    .touch-btn {
+        width: 50px;
+        height: 50px;
+        background: rgba(76, 175, 80, 0.9);
+        border: 2px solid rgba(255, 255, 255, 0.5);
+        border-radius: 50%;
+        color: white;
+        font-size: 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        user-select: none;
+        touch-action: manipulation;
+        transition: all 0.2s ease;
+    }
+    
+    .touch-btn:active {
+        transform: scale(0.95);
+        background: rgba(76, 175, 80, 1);
+    }
+    
+    .touch-btn.rotate {
+        background: rgba(33, 150, 243, 0.9);
+    }
+    
+    .touch-btn.drop {
+        background: rgba(255, 152, 0, 0.9);
+    }
+}
+
+/* 📱 ARKANOID MOBILE */
+@media (max-width: 768px) {
+    .arkanoid-container {
+        margin-bottom: 100px; /* Espaço para controles touch */
+    }
+    
+    .touch-pad {
+        width: 100%;
+        max-width: 300px;
+        height: 80px;
+        background: rgba(255, 255, 255, 0.1);
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        border-radius: 40px;
+        backdrop-filter: blur(10px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 14px;
+    }
+}
+
+/* 🎯 MELHORIAS GERAIS PARA MOBILE */
+@media (max-width: 480px) {
+    .stat-item {
+        padding: 8px 12px;
+    }
+    
+    .stat-label {
+        font-size: 0.7rem;
+    }
+    
+    .stat-value {
+        font-size: 1rem;
+    }
+    
+    .control-buttons {
+        grid-template-columns: 1fr;
+    }
+    
+    .touch-btn {
+        width: 45px;
+        height: 45px;
+        font-size: 0.9rem;
+    }
+}
